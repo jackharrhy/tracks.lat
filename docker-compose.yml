@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  tracks:
+    image: ghcr.io/jackharrhy/tracks.lat
+    build: .
+    ports:
+      - "127.0.0.1:8000:80"
