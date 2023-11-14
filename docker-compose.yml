@@ -6,3 +6,17 @@ services:
     build: .
     ports:
       - "127.0.0.1:8000:80"
+
+  db:
+    image: postgis/postgis:16-master
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: tracks.lat
+    ports:
+      - "127.0.0.1:5932:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+
+volumes:
+  db:
