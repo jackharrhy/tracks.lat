@@ -1,39 +1,49 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
+{% block head %}
+<style>
+  img {
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    height: 128px;
+    width: 128px;
+  }
 
-<head>
-  <meta charset="utf-8">
-  <title>tracks.lat</title>
-  <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
-  <style>
-    * {
-      font-family: monospace;
-    }
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
 
-    html,
-    body {
-      height: 100%;
-    }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
 
-    body {
-      margin: 0;
-      background-color: #aa0000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    h1 {
-      font-size: 4rem;
-      color: #fbf7f5;
-    }
-  </style>
-</head>
-
-<body>
-  <h1>🌐 tracks.lat/lon 🌐</h1>
-</body>
-</body>
-
-</html>
+  form {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<h1>🌐 tracks.lat/lon 🌐</h1>
+<h2>tracks</h2>
+<ul>
+  {% for track in tracks %}
+  <a href="/lon/map/{{ track['id'] }}">
+    <li>
+      {{ track["name"] }} {{ track["activity_emoji"] }}
+      <img src="/lon/map/{{ track['id'] }}.png" alt="{{ track['name'] }}" />
+    </li>
+  </a>
+  {% endfor %}
+</ul>
+<form method="post" enctype="multipart/form-data">
+  <input type="file" id="gpx" name="gpx" />
+  <input id="secret_password" name="secret_password" type="password" placeholder="secret password" />
+  <button type="submit">upload gpx</button>
+</form>
+{% endblock %}
