@@ -6,6 +6,9 @@ services:
     build: .
     ports:
       - "127.0.0.1:8000:80"
+    environment:
+      - TRACKSLAT_PG_DSN=postgres://postgres:password@db:5432/tracks.lat
+      - TRACKSLAT_SECRET_PASSWORD=hellodocker
 
   db:
     image: postgis/postgis:16-master
