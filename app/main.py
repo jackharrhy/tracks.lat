@@ -135,8 +135,9 @@ async def display_map_by_id_as_png(
 
     buf = io.BytesIO()
     fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
-    buf.seek(0)
+    plt.close(fig)
 
+    buf.seek(0)
     return StreamingResponse(buf, media_type="image/png")
 
 
