@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}{{ name }} {{ activity_emoji }}{% endblock %}
+{% block content %}
+<img src="/lon/{{ username }}/{{ slug }}.png" alt="{{ name }}" />
+{% endblock %}

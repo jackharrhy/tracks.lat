@@ -10,3 +10,5 @@ python-multipart==0.0.6
 shapely==2.*
 geopandas==0.14.*
 matplotlib==3.*
+itsdangerous==2.*
+bcrypt==4.*

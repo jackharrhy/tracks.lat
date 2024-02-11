@@ -4,7 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     pg_dsn: str = "postgres://postgres:password@localhost:5932/tracks.lat"
 
-    secret_password: str = "secret"
+    session_secret_key: str = "session-secret"
+
+    registrations_open: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

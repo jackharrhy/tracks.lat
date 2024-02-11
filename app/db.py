@@ -57,14 +57,32 @@ async def get_connection() -> asyncpg.Connection:
 
 async def create_db_schema(connection: asyncpg.Connection):
     logger.info("Creating DB Schema...")
+
     await connection.execute(
         """
-        CREATE TABLE IF NOT EXISTS tracks(
+        CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
-            name TEXT NOT NULL,
-            geometry GEOMETRY(MULTILINESTRING, 4326) NOT NULL,
-            activity TEXT
+            username TEXT NOT NULL,
+            email TEXT NOT NULL,
+            password_hash BYTEA NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP
         )
     """
     )
+
+    await connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS tracks (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            slug TEXT NOT NULL,
+            geometry GEOMETRY(MULTILINESTRING, 4326) NOT NULL,
+            activity TEXT,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL,
+            UNIQUE (user_id, slug)
+        )
+    """
+    )
+
     logger.info("Created DB Schema")

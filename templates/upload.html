@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}upload{% endblock %}
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+    <input type="file" id="gpx" name="gpx" />
+    <button type="submit">upload gpx</button>
+</form>
+{% endblock %}
