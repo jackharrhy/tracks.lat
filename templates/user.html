@@ -4,19 +4,19 @@
 <h3>my tracks</h3>
 <ul>
     {% for track in tracks %}
-    <a href="/lon/{{ track['username'] }}/{{ track['slug'] }}">
         <li>
             {% if track['username'] == user['username'] %}
             <form action="/lon/{{ track['username'] }}/{{ track['slug'] }}" method="post">
-                <button class="link">delete</button>
+                <button class="link">delete 🗑️</button>
                 <input type="hidden" name="method" value="DELETE">
             </form>
             {% endif %}
-            <img class="square small" src="/lon/{{ track['username'] }}/{{ track['slug'] }}.png"
-                alt="{{ track['name'] }}" />
-            {{ track["name"] }} {{ track["activity_emoji"] }}
+            <a href="/lon/{{ track['username'] }}/{{ track['slug'] }}">
+                <img class="square small" src="/lon/{{ track['username'] }}/{{ track['slug'] }}.png"
+                    alt="{{ track['name'] }}" />
+                {{ track["name"] }} {{ track["activity_emoji"] }}
+            </a>
         </li>
-    </a>
     {% endfor %}
 </ul>
 {% endblock %}

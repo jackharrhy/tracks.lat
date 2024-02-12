@@ -28,11 +28,25 @@ def run_dev_api():
         reload_dirs=["app", "templates"],
     )
 
+
 @app.command()
 def display_settings():
     from app.settings import settings
 
     typer.echo(settings.model_dump_json(indent=2))
+
+
+@app.command()
+def create_user(username: str, email: str, password: str):
+    from app.db import get_connection
+    from app.main import create_user
+
+    async def run():
+        connection = await get_connection()
+        await create_user(connection, username, email, password)
+        await connection.close()
+
+    asyncio.run(run())
 
 
 if __name__ == "__main__":

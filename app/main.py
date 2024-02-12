@@ -1,6 +1,5 @@
 import io
 
-import urllib.parse
 import typing
 import bcrypt
 from starlette.middleware.sessions import SessionMiddleware
@@ -228,6 +227,10 @@ async def logout_route(request: Request):
 
 @app.get("/lon/register")
 async def register_page_route(request: Request):
+    if not settings.registrations_open:
+        # TODO this should be a redirect + flash message instead
+        return "Registrations are closed"
+
     return templates.TemplateResponse(
         "register.html",
         {
@@ -235,6 +238,26 @@ async def register_page_route(request: Request):
             "registrations_open": settings.registrations_open,
         },
     )
+
+
+async def create_user(con: Connection, username: str, email: str, password: str):
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+
+    user_id = await con.fetchval(
+        """
+        INSERT INTO users (username, email, password_hash)
+        VALUES ($1, $2, $3)
+        RETURNING id
+        """,
+        username,
+        email,
+        hashed_password,
+    )
+
+    if user_id is None:
+        raise Exception("Failed to insert user")
+
+    return user_id
 
 
 @app.post("/lon/register")
@@ -269,31 +292,7 @@ async def register_route(
         # TODO this should be a flash message instead
         return ", ".join(errors)
 
-    async with con.transaction():
-        already_exists = await con.fetchrow(
-            "SELECT id FROM users WHERE username = $1",
-            username,
-        )
-
-        if already_exists is not None:
-            # TODO this should be a flash message instead
-            return "Username already taken"
-
-        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
-
-        user_id = await con.fetchval(
-            """
-            INSERT INTO users (username, email, password_hash)
-            VALUES ($1, $2, $3)
-            RETURNING id
-            """,
-            username,
-            email,
-            hashed_password,
-        )
-
-        if user_id is None:
-            raise Exception("Failed to insert user")
+    user_id = await create_user(con, username, email, password)
 
     logger.info(f"Registered user {username} with ID {user_id}")
 

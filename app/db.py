@@ -66,7 +66,8 @@ async def create_db_schema(connection: asyncpg.Connection):
             email TEXT NOT NULL,
             password_hash BYTEA NOT NULL,
             created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-            updated_at TIMESTAMP
+            updated_at TIMESTAMP,
+            UNIQUE (username)
         )
     """
     )
@@ -80,6 +81,8 @@ async def create_db_schema(connection: asyncpg.Connection):
             geometry GEOMETRY(MULTILINESTRING, 4326) NOT NULL,
             activity TEXT,
             user_id INTEGER REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP,
             UNIQUE (user_id, slug)
         )
     """
