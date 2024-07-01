@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   tracks:
     image: ghcr.io/jackharrhy/tracks.lat

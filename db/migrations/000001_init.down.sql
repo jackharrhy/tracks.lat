@@ -1,0 +1,6 @@
+BEGIN;
+
+DROP TABLE tracks;
+DROP TABLE users;
+
+COMMIT;

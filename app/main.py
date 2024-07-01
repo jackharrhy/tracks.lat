@@ -1,4 +1,5 @@
 import io
+from contextlib import asynccontextmanager
 
 import typing
 import bcrypt
@@ -15,19 +16,17 @@ from loguru import logger
 from app.db import get_connection_from_pool, create_pool, close_pool
 from app.settings import settings
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_pool()
+    yield
+    await close_pool()
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(SessionMiddleware, secret_key=settings.session_secret_key)
-
-
-@app.on_event("startup")
-async def startup():
-    await create_pool()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await close_pool()
 
 
 async def get_con():
@@ -140,9 +139,9 @@ async def upload_gpx_route(
         return "You have reached the maximum number of tracks, poke Jack"
 
     row = gpd.read_file(gpx.file, layer="tracks", driver="GPX").iloc[0]
-    name = row["name"]
+    name = row["name"] or gpx.filename
     geometry = row["geometry"].wkt
-    activity = row["type"]
+    activity = row["type"] or "walking"
     user_id = user["id"]
     slug = slugify_name(name)
 
@@ -240,18 +239,21 @@ async def register_page_route(request: Request):
     )
 
 
-async def create_user(con: Connection, username: str, email: str, password: str):
+async def create_user(
+    con: Connection, username: str, email: str, password: str, role: str
+):
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
     user_id = await con.fetchval(
         """
-        INSERT INTO users (username, email, password_hash)
-        VALUES ($1, $2, $3)
+        INSERT INTO users (username, email, password_hash, role)
+        VALUES ($1, $2, $3, $4)
         RETURNING id
         """,
         username,
         email,
         hashed_password,
+        role,
     )
 
     if user_id is None:
@@ -292,7 +294,7 @@ async def register_route(
         # TODO this should be a flash message instead
         return ", ".join(errors)
 
-    user_id = await create_user(con, username, email, password)
+    user_id = await create_user(con, username, email, password, "user")
 
     logger.info(f"Registered user {username} with ID {user_id}")
 

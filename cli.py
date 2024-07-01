@@ -17,12 +17,12 @@ def setup_database():
 
 
 @app.command()
-def run_dev_api():
+def run_dev_api(host: str = "127.0.0.1"):
     import uvicorn
 
     uvicorn.run(
         "app.main:app",
-        host="127.0.0.1",
+        host=host,
         port=8000,
         reload=True,
         reload_dirs=["app", "templates"],
@@ -37,13 +37,13 @@ def display_settings():
 
 
 @app.command()
-def create_user(username: str, email: str, password: str):
+def create_user(username: str, email: str, password: str, role: str):
     from app.db import get_connection
     from app.main import create_user
 
     async def run():
         connection = await get_connection()
-        await create_user(connection, username, email, password)
+        await create_user(connection, username, email, password, role)
         await connection.close()
 
     asyncio.run(run())
