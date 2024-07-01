@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}admin{% endblock %}
+{% block content %}
+<h3>create user</h3>
+<form method="post" enctype="multipart/form-data">
+    <input name="username" placeholder="username" />
+    <input name="email" placeholder="email" />
+    <input type="password" name="password" placeholder="password" />
+    <input name="role" placeholder="role" />
+    <input type="hidden" name="action" value="create-user" />
+    <button type="submit">create user</button>
+</form>
+{% endblock %}

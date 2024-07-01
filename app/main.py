@@ -1,3 +1,4 @@
+from typing import Annotated
 import io
 from contextlib import asynccontextmanager
 
@@ -188,22 +189,23 @@ async def login_page_route(request: Request):
     )
 
 
-def setup_user_session(request: Request, id: int, username: str):
+def setup_user_session(request: Request, id: int, username: str, role: str):
     request.session["user"] = {
         "id": id,
         "username": username,
+        "role": role,
     }
 
 
 @app.post("/lon/login")
 async def login_route(
     request: Request,
-    username: str = Form(...),
-    password: str = Form(...),
+    username: Annotated[str, Form()],
+    password: Annotated[str, Form()],
     con: Connection = Depends(get_con),
 ):
     user = await con.fetchrow(
-        "SELECT id, username, password_hash FROM users WHERE username = $1",
+        "SELECT id, username, password_hash, role FROM users WHERE username = $1",
         username,
     )
 
@@ -213,7 +215,7 @@ async def login_route(
         # TODO this should be a flash message instead
         return "Invalid username or password"
 
-    setup_user_session(request, user["id"], user["username"])
+    setup_user_session(request, user["id"], user["username"], user["role"])
 
     return RedirectResponse(f"/lon/{user['username']}", status_code=303)
 
@@ -238,6 +240,44 @@ async def register_page_route(request: Request):
         },
     )
 
+
+@app.get("/lon/admin")
+async def admin_page_route(request: Request):
+    user = request.session.get("user")
+
+    if user is None:
+        return RedirectResponse("/lon/login", status_code=303)
+
+    if user["role"] != "admin":
+        return "nuh uh 🚫"
+
+    return templates.TemplateResponse("admin.html", {"request": request})
+
+@app.post("/lon/admin")
+async def admin_route(request: Request, action: Annotated[str, Form()], con: Connection = Depends(get_con)):
+    user = request.session.get("user")
+
+    if user is None:
+        return RedirectResponse("/lon/login", status_code=303)
+
+    if user["role"] != "admin":
+        return "nuh uh 🚫"
+
+    match action:
+        case "create-user":
+            form = await request.form()
+            username = form.get("username")
+            email = form.get("email")
+            password = form.get("password")
+            role = form.get("role")
+
+            user_id = await create_user(con, username, email, password, role)
+
+            logger.info(f"Created user {username} with ID {user_id}")
+
+            return RedirectResponse("/lon/admin", status_code=303)
+    
+    return not_found_resp(request)
 
 async def create_user(
     con: Connection, username: str, email: str, password: str, role: str
@@ -265,9 +305,9 @@ async def create_user(
 @app.post("/lon/register")
 async def register_route(
     request: Request,
-    username: str = Form(...),
-    email: str = Form(...),
-    password: str = Form(...),
+    username: Annotated[str, Form()],
+    email: Annotated[str, Form()],
+    password: Annotated[str, Form()],
     con: Connection = Depends(get_con),
 ):
     if not settings.registrations_open:
@@ -294,11 +334,13 @@ async def register_route(
         # TODO this should be a flash message instead
         return ", ".join(errors)
 
-    user_id = await create_user(con, username, email, password, "user")
+    role = "user"
+
+    user_id = await create_user(con, username, email, password, role)
 
     logger.info(f"Registered user {username} with ID {user_id}")
 
-    setup_user_session(request, user_id, username)
+    setup_user_session(request, user_id, username, role)
 
     return RedirectResponse(f"/lon/{username}", status_code=303)
 
@@ -411,7 +453,7 @@ async def track_actions(
     request: Request,
     username: str,
     slug: str,
-    method: str = Form(...),
+    method: Annotated[str, Form()],
     con: Connection = Depends(get_con),
 ):
     user = request.session.get("user")
