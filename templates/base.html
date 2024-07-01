@@ -187,6 +187,9 @@
             <form action="/lon/logout" method="post">
                 <button class="link">logout</button>
             </form>
+            {% if user.role == "admin" %}
+            <a href="/lon/admin">admin</a>
+            {% endif %}
             {% else %}
             <a href="/lon/login">login</a>
             {% endif %}
