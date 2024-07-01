@@ -141,6 +141,10 @@ async def upload_gpx_route(
 
     row = gpd.read_file(gpx.file, layer="tracks", driver="GPX").iloc[0]
     name = row["name"] or gpx.filename
+
+    if name.lower().endswith(".gpx"):
+        name = name[:-4]
+
     geometry = row["geometry"].wkt
     activity = row["type"] or "walking"
     user_id = user["id"]
