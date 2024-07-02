@@ -1,13 +1,13 @@
 from typing import Optional, AsyncGenerator
 from contextlib import asynccontextmanager
 
+import shapely
 import asyncpg
 from loguru import logger
 
 from app.settings import settings
 
 pool: Optional[asyncpg.Pool] = None
-
 
 async def create_pool() -> asyncpg.Pool:
     global pool

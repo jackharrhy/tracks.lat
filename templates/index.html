@@ -1,14 +1,5 @@
 {% extends "base.html" %}
 {% block title %}tracks{% endblock %}
 {% block content %}
-<ul>
-  {% for track in tracks %}
-  <a href="/lon/{{ track['username'] }}/{{ track['slug'] }}">
-    <li>
-      <img class="square small" src="/lon/{{ track['username'] }}/{{ track['slug'] }}.png" alt="{{ track['name'] }}" />
-      {{ track["name"] }} {{ track["activity_emoji"] }}
-    </li>
-  </a>
-  {% endfor %}
-</ul>
+<div id="map"></div>
 {% endblock %}
