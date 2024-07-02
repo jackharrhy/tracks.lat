@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Union
 import io
 from contextlib import asynccontextmanager
 
@@ -6,7 +6,8 @@ import typing
 import bcrypt
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi import FastAPI, Request, Depends, UploadFile, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 import shapely.wkb
 import geopandas as gpd
@@ -28,7 +29,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(SessionMiddleware, secret_key=settings.session_secret_key)
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 async def get_con():
     async with get_connection_from_pool() as con:
@@ -66,12 +67,33 @@ def activity_to_emoji(activity: str):
             return "❓"
 
 
-@app.get("/lon/", response_class=HTMLResponse)
-async def display_root_route(request: Request, con: Connection = Depends(get_con)):
-    records = await con.fetch(
+@app.get("/lon/")
+async def display_root_route(request: Request, con: Connection = Depends(get_con), format: str = None):
+    if format is None or format == "html":
+        return templates.TemplateResponse("index.html", {"request": request})
+
+    if format != "json":
+        return not_found_resp(request)
+
+    aggregates = await con.fetchrow(
         """
         SELECT
-            tracks.id as id, slug, name, activity, username
+            ST_AsGeoJSON(ST_Centroid(ST_Extent(geometry)))::json as center,
+            ST_AsGeoJSON(ST_Extent(geometry))::json as extent
+        FROM
+            tracks
+    """
+    )
+
+    tracks = await con.fetch(
+        """
+        SELECT
+            tracks.id as id,
+            slug,
+            name,
+            activity,
+            username,
+            ST_AsGeoJSON(geometry)::json as geometry
         FROM
             tracks
         JOIN
@@ -79,23 +101,10 @@ async def display_root_route(request: Request, con: Connection = Depends(get_con
     """
     )
 
-    tracks = [
-        {
-            "username": record["username"],
-            "slug": record["slug"],
-            "name": record["name"],
-            "activity_emoji": activity_to_emoji(record["activity"]),
-        }
-        for record in records
-    ]
-
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "tracks": tracks,
-        },
-    )
+    return {
+        "aggregates": aggregates,
+        "tracks": tracks,
+    }
 
 
 @app.get("/lon/upload")
