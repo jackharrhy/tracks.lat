@@ -79,11 +79,11 @@ async def display_track_as_png(
     gdf = gpd.GeoDataFrame({"geometry": [wkb]})
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    gdf.plot(ax=ax)
+    gdf.plot(ax=ax, color="white", linewidth=2)
     fig.axes[0].set_axis_off()
 
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
+    fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0, transparent=True)
     plt.close(fig)
 
     buf.seek(0)
