@@ -1,13 +1,14 @@
 from typing import Optional, AsyncGenerator
 from contextlib import asynccontextmanager
 
-import shapely
+import bcrypt
 import asyncpg
 from loguru import logger
 
 from app.settings import settings
 
 pool: Optional[asyncpg.Pool] = None
+
 
 async def create_pool() -> asyncpg.Pool:
     global pool
@@ -40,8 +41,7 @@ async def get_pool() -> asyncpg.Pool:
         return pool
 
 
-@asynccontextmanager
-async def get_connection_from_pool() -> AsyncGenerator[asyncpg.Connection, None]:
+async def get_connection_from_pool():
     pool = await get_pool()
     async with pool.acquire() as connection:
         try:
@@ -55,37 +55,28 @@ async def get_connection() -> asyncpg.Connection:
     return await asyncpg.connect(settings.pg_dsn)
 
 
-async def create_db_schema(connection: asyncpg.Connection):
-    logger.info("Creating DB Schema...")
+async def create_user(
+    con: asyncpg.Connection, username: str, email: str, password: str, role: str
+):
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
-    await connection.execute(
+    user_id = await con.fetchval(
         """
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            username TEXT NOT NULL,
-            email TEXT NOT NULL,
-            password_hash BYTEA NOT NULL,
-            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-            updated_at TIMESTAMP,
-            UNIQUE (username)
-        )
-    """
+        INSERT INTO users (username, email, password_hash, role)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id
+        """,
+        username,
+        email,
+        hashed_password,
+        role,
     )
 
-    await connection.execute(
-        """
-        CREATE TABLE IF NOT EXISTS tracks (
-            id SERIAL PRIMARY KEY,
-            name TEXT NOT NULL,
-            slug TEXT NOT NULL,
-            geometry GEOMETRY(MULTILINESTRING, 4326) NOT NULL,
-            activity TEXT,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL,
-            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-            updated_at TIMESTAMP,
-            UNIQUE (user_id, slug)
-        )
-    """
-    )
+    if user_id is None:
+        raise Exception("Failed to insert user")
 
-    logger.info("Created DB Schema")
+    return user_id
+
+
+def check_password(password: str, hashed_password: bytes) -> bool:
+    return bcrypt.checkpw(password.encode("utf-8"), hashed_password)

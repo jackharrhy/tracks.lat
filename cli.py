@@ -37,18 +37,6 @@ def download_javascript_libs():
             f.write(req.content)
 
 @app.command()
-def setup_database():
-    from app.db import get_connection, create_db_schema
-
-    async def run():
-        connection = await get_connection()
-        await create_db_schema(connection)
-        await connection.close()
-
-    asyncio.run(run())
-
-
-@app.command()
 def run_dev_api(host: str = "127.0.0.1"):
     import uvicorn
 
