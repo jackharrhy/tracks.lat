@@ -75,11 +75,10 @@ async def upload_gpx_route(
         # TODO this should be a flash message instead
         return ", ".join(errors)
 
-    record_id = await con.fetchval(
+    await con.fetchval(
         """
         INSERT INTO tracks (name, slug, geometry, activity, user_id)
         VALUES ($1, $2, ST_SetSRID(ST_GeomFromText($3), 4326), $4, $5)
-        RETURNING id
         """,
         name,
         slug,
@@ -88,9 +87,6 @@ async def upload_gpx_route(
         user_id,
     )
 
-    if record_id is None:
-        raise Exception("Failed to insert track")
-
-    logger.info(f"Inserted track {name} with ID {record_id}")
+    logger.info(f"Inserted track {name}")
 
     return RedirectResponse(f"/lon/{user['username']}/{slug}", status_code=303)

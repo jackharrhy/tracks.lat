@@ -17,7 +17,9 @@ def download_javascript_libs():
     with tempfile.TemporaryDirectory() as tempdir:
         tempdir = Path(tempdir)
         zip_path = tempdir / "leaflet.zip"
-        zip = "https://leafletjs-cdn.s3.amazonaws.com/content/leaflet/v1.9.4/leaflet.zip"
+        zip = (
+            "https://leafletjs-cdn.s3.amazonaws.com/content/leaflet/v1.9.4/leaflet.zip"
+        )
 
         req = httpx.get(zip)
         with open(zip_path, "wb") as f:
@@ -28,13 +30,22 @@ def download_javascript_libs():
 
         (tempdir / "leaflet.css").rename(static_dir / "leaflet.css")
         (tempdir / "leaflet-src.esm.js").rename(static_dir / "leaflet-src.esm.js")
-        (tempdir / "leaflet-src.esm.js.map").rename(static_dir / "leaflet-src.esm.js.map")
+        (tempdir / "leaflet-src.esm.js.map").rename(
+            static_dir / "leaflet-src.esm.js.map"
+        )
 
         turf = "https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"
 
         req = httpx.get(turf)
         with open(static_dir / "turf.min.js", "wb") as f:
             f.write(req.content)
+
+        htmx = "https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js"
+
+        req = httpx.get(htmx)
+        with open(static_dir / "htmx.min.js", "wb") as f:
+            f.write(req.content)
+
 
 @app.command()
 def run_dev_api(host: str = "127.0.0.1"):

@@ -7,8 +7,7 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
     <link rel="stylesheet" href="/static/leaflet.css" />
-    <script src="/static/turf.min.js"></script>
-    <script type="module" src="/static/tracks-lat.js"></script>
+    <script src="/static/htmx.min.js"></script>
     <style>
         * {
             font-family: monospace;
@@ -210,7 +209,7 @@
     </style>
 </head>
 
-<body>
+<body hx-boost="true">
     <header>
         <div></div>
         <div>
@@ -237,6 +236,8 @@
         <h2>{{ self.title() }}</h2>
         {% block content %}{% endblock %}
     </main>
+    <script src="/static/turf.min.js"></script>
+    <script type="module" src="/static/tracks-lat.js"></script>
 </body>
 </body>
 
