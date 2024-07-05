@@ -1,0 +1,9 @@
+BEGIN;
+
+ALTER TABLE tracks DROP CONSTRAINT tracks_pkey;
+
+ALTER TABLE tracks DROP COLUMN id;
+
+ALTER TABLE tracks ADD PRIMARY KEY (user_id, slug);
+
+COMMIT;

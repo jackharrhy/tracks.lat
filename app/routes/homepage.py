@@ -11,7 +11,7 @@ async def html_template(request: Request, con: Connection):
     records = await con.fetch(
         """
         SELECT
-            tracks.id as id, slug, name, activity, username
+            slug, name, activity, username
         FROM
             tracks
         JOIN
@@ -52,7 +52,6 @@ async def json_data(con: Connection):
     tracks = await con.fetch(
         """
         SELECT
-            tracks.id as id,
             slug,
             name,
             activity,
