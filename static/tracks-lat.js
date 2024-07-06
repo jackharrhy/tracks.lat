@@ -1,12 +1,9 @@
 import * as L from "/static/leaflet-src.esm.js";
 
 let map;
+let layerGroup;
 
 const setup = async () => {
-  if (map) {
-    throw new Error("Map already initialized");
-  }
-
   const response = await fetch("?format=json");
   const data = await response.json();
   console.log({ data });
@@ -40,21 +37,28 @@ const setup = async () => {
 
   const extent = JSON.parse(data.aggregates.extent);
 
-  map = L.map("map")
-    .setView(center, 10)
-    .fitBounds([
-      [extent.coordinates[0][0][1], extent.coordinates[0][0][0]],
-      [extent.coordinates[0][2][1], extent.coordinates[0][2][0]],
-    ]);
+  if (!map) {
+    map = L.map("map");
 
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution:
-      '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(map);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    layerGroup = L.layerGroup();
+    layerGroup.addTo(map);
+  }
+
+  map.setView(center, 10).fitBounds([
+    [extent.coordinates[0][0][1], extent.coordinates[0][0][0]],
+    [extent.coordinates[0][2][1], extent.coordinates[0][2][0]],
+  ]);
+
+  layerGroup.clearLayers();
 
   tracks.map(({ layer }) => {
-    layer.addTo(map);
+    layerGroup.addLayer(layer);
   });
 
   Array.from(document.querySelectorAll("a[data-track]")).map((elm) => {
